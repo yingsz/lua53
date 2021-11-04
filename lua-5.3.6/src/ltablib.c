@@ -18,8 +18,11 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-
-
+#include "lobject.h"
+#include "ltable.h"
+#include "lmem.h"
+#include "lapi.h"
+#include "lgc.h"
 /*
 ** Operations that an object must define to mimic a table
 ** (some functions only need some of them)
@@ -420,6 +423,45 @@ static int sort (lua_State *L) {
   return 0;
 }
 
+static Table* clonetabimpl(lua_State* L, Table* src)
+{
+	Table* t = luaH_new(L);
+	auto asize = src->sizearray;
+	auto hsize = sizenode(src);
+	if (asize > 0)
+	{
+		luaM_reallocvector(L, t->array, 0, asize, TValue);
+		t->sizearray = asize;
+		memcpy(t->array, src->array, asize * sizeof(TValue));
+		for (int i = 0; i < asize; i++)
+		{
+			if (ttistable(&t->array[i]))
+				sethvalue(L, &t->array[i], clonetabimpl(L, hvalue(&t->array[i])));
+		}
+	}
+	if (hsize >0) {  /* no elements to hash part? */
+		t->node = luaM_newvector(L, hsize, Node);		
+		t->lsizenode = src->lsizenode;
+		t->lastfree = t->node + (src->lastfree - src->node);
+		memcpy(t->node, src->node, hsize * sizeof(Node));
+		for (int i = 0; i < (int)hsize; i++) {
+			Node *n = gnode(t, i);
+			if(ttistable(gval(n)))
+				sethvalue(L, gval(n), clonetabimpl(L, hvalue(gval(n))));
+		}
+	}
+	t->metatable = src->metatable;
+	return t;
+}
+
+//yaoyao
+static int clonetab(lua_State* L)
+{
+	luaL_checktype(L, 1, LUA_TTABLE);
+	Table* src = lua_topointer(L, 1);
+	sethvalue(L, L->top++, clonetabimpl(L, src));
+	return 1;
+}
 /* }====================================================== */
 
 
@@ -433,6 +475,7 @@ static const luaL_Reg tab_funcs[] = {
   {"unpack", unpack},
   {"remove", tremove},
   {"move", tmove},
+  {"clone", clonetab},
   {"sort", sort},
   {NULL, NULL}
 };

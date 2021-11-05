@@ -1,3 +1,2 @@
-﻿  ltablib.c
-h:\lua\lua53\lua-5.3.6\src\ltablib.c(461): warning C4090: “初始化”: 不同的“const”限定符
+﻿  ltable.c
   Lua536.vcxproj -> H:\Lua\lua53\Lua536\Debug\Lua536.exe

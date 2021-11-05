@@ -425,13 +425,12 @@ static int sort (lua_State *L) {
 
 static Table* clonetabimpl(lua_State* L, Table* src)
 {
-	Table* t = luaH_new(L);
+	Table* t = luaH_clone(L, src);
 	auto asize = src->sizearray;
 	auto hsize = sizenode(src);
 	if (asize > 0)
 	{
 		luaM_reallocvector(L, t->array, 0, asize, TValue);
-		t->sizearray = asize;
 		memcpy(t->array, src->array, asize * sizeof(TValue));
 		for (int i = 0; i < asize; i++)
 		{
@@ -441,7 +440,6 @@ static Table* clonetabimpl(lua_State* L, Table* src)
 	}
 	if (hsize >0) {  /* no elements to hash part? */
 		t->node = luaM_newvector(L, hsize, Node);		
-		t->lsizenode = src->lsizenode;
 		t->lastfree = t->node + (src->lastfree - src->node);
 		memcpy(t->node, src->node, hsize * sizeof(Node));
 		for (int i = 0; i < (int)hsize; i++) {
@@ -450,7 +448,6 @@ static Table* clonetabimpl(lua_State* L, Table* src)
 				sethvalue(L, gval(n), clonetabimpl(L, hvalue(gval(n))));
 		}
 	}
-	t->metatable = src->metatable;
 	return t;
 }
 

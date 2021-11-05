@@ -429,6 +429,13 @@ Table *luaH_new (lua_State *L) {
   return t;
 }
 
+Table *luaH_clone(lua_State *L, Table* src) {
+	GCObject *o = luaC_cloneobj(L, obj2gco(src), sizeof(Table));
+	Table *t = gco2t(o);
+	t->gclist = NULL;
+	t->array = NULL;
+	return t;
+}
 
 void luaH_free (lua_State *L, Table *t) {
   if (!isdummy(t))

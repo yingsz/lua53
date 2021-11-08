@@ -434,6 +434,11 @@ Table *luaH_clone(lua_State *L, Table* src) {
 	Table *t = gco2t(o);
 	t->gclist = NULL;
 	t->array = NULL;
+	if (t->lsizenode <= 0)
+	{
+		t->node = cast(Node *, dummynode);
+		t->lastfree = NULL;
+	}
 	return t;
 }
 

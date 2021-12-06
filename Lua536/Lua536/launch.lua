@@ -24,12 +24,21 @@ function testclone()
 	print("finish")
 end
 
+print("testNewGuid")
+
 function testNewGuid()
+	print("newGuid")
 	local tb = table.newGuid(1);
 	tb[1] = 2
 	tb.k = "v"
 	tb = nil
 	collectgarbage"collect"
-	tb = table.newGuid(1);
-	table.size(tb)
+	tb = table.newGuid(1)
+	local asize, hsize = table.size(tb)
+	print(asize)
+	print(hsize)
 end
+
+local ok, err = pcall(testNewGuid)
+print( ok )
+print( err )

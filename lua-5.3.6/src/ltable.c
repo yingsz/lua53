@@ -429,6 +429,7 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	global_State *g = G(L);
 	GCObject *o = obj2gco(tab);
 	o->marked = luaC_white(g);
+	_alltables[guid] = o->next;
 	o->next = g->allgc;
 	g->allgc = o;
 	tab->metatable = NULL;
@@ -476,7 +477,10 @@ void luaH_free (lua_State *L, Table *t) {
 	{
 		GCObject* gco = obj2gco(t);
 		Table* head = _alltables[t->guid];
-		obj2gco(head)->next = gco;
+		if (head)
+			obj2gco(head)->next = gco;
+		else
+			_alltables[t->guid] = gco;
 		gco->next = head;
 		return;
 	}

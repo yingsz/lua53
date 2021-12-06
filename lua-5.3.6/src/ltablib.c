@@ -464,14 +464,20 @@ static int clonetab(lua_State* L)
 
 static int newGuid(lua_State* L)
 {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	luaL_checktype(L, 2, LUA_TNUMBER);
-	Table* src = lua_topointer(L, 1);
-	unsigned short guid = lua_tointeger(L, 2);
+	luaL_checktype(L, 1, LUA_TNUMBER);
+	unsigned short guid = lua_tointeger(L, 1);
 	sethvalue(L, L->top++, luaH_newGuid(L, guid));
 	return 1;
 }
 
+static int sizetab(lua_State* L)
+{
+	luaL_checktype(L, 1, LUA_TTABLE);
+	Table* src = lua_topointer(L, 1);
+	setivalue(L->top++, src->sizearray);
+	setivalue(L->top++, sizenode(src));
+	return 2;
+}
 static const luaL_Reg tab_funcs[] = {
   {"concat", tconcat},
 #if defined(LUA_COMPAT_MAXN)
@@ -484,6 +490,7 @@ static const luaL_Reg tab_funcs[] = {
   {"move", tmove},
   {"clone", clonetab},
   {"newGuid", newGuid},
+  {"size", sizetab},
   {"sort", sort},
   {NULL, NULL}
 };

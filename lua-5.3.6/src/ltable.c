@@ -411,16 +411,38 @@ static void rehash (lua_State *L, Table *t, const TValue *ek) {
   luaH_resize(L, t, asize, totaluse - na);
 }
 
-
-
+#define  MAXTABGUID  65536
+static Table* _alltables[MAXTABGUID] = {0};
 /*
 ** }=============================================================
 */
 
+Table* luaH_newGuid(lua_State* L, unsigned short guid)
+{
+	Table* tab = _alltables[guid];
+	if (!tab)
+	{
+		tab = luaH_new(L);
+		tab->guid = guid;
+		return tab;
+	}
+	global_State *g = G(L);
+	GCObject *o = obj2gco(tab);
+	o->marked = luaC_white(g);
+	o->next = g->allgc;
+	g->allgc = o;
+	tab->metatable = NULL;
+	tab->flags = cast_byte(~0);
+	tab->lastfree = NULL;
+	memset(tab->array, 0, tab->sizearray * sizeof(TValue));
+	memset(tab->node, 0, sizenode(tab)* sizeof(Node));
+	return tab;
+}
 
 Table *luaH_new (lua_State *L) {
   GCObject *o = luaC_newobj(L, LUA_TTABLE, sizeof(Table));
   Table *t = gco2t(o);
+  t->guid = 0;
   t->metatable = NULL;
   t->flags = cast_byte(~0);
   t->array = NULL;
@@ -442,13 +464,42 @@ Table *luaH_clone(lua_State *L, Table* src) {
 	return t;
 }
 
-void luaH_free (lua_State *L, Table *t) {
-  if (!isdummy(t))
-    luaM_freearray(L, t->node, cast(size_t, sizenode(t)));
-  luaM_freearray(L, t->array, t->sizearray);
-  luaM_free(L, t);
+void luaH_freeimpl(lua_State *L, Table *t) {
+	if (!isdummy(t))
+		luaM_freearray(L, t->node, cast(size_t, sizenode(t)));
+	luaM_freearray(L, t->array, t->sizearray);
+	luaM_free(L, t);
 }
 
+void luaH_free (lua_State *L, Table *t) {
+	if (t->guid)
+	{
+		GCObject* gco = obj2gco(t);
+		Table* head = _alltables[t->guid];
+		obj2gco(head)->next = gco;
+		gco->next = head;
+		return;
+	}
+	luaH_freeimpl(L, t);
+}
+
+void luaH_freeAllTable(lua_State* L)
+{
+	for (int i = 0; i < MAXTABGUID; i++)
+	{
+		Table* tab = _alltables[i];
+		while (tab)
+		{
+			GCObject* next = obj2gco(tab)->next;
+			luaH_freeimpl(L, tab);
+			if (next)
+				tab = next;
+			else
+				tab = NULL;
+		}
+	}
+	memset(_alltables, 0, sizeof(Table*)*MAXTABGUID);
+}
 
 static Node *getfreepos (Table *t) {
   if (!isdummy(t)) {

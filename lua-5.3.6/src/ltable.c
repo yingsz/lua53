@@ -432,9 +432,10 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	_alltables[guid] = o->next;
 	o->next = g->allgc;
 	g->allgc = o;
+	tab->gclist = NULL;
 	tab->metatable = NULL;
 	tab->flags = cast_byte(~0);
-	tab->lastfree = NULL;
+	tab->lastfree = gnode(tab, sizenode(tab));
 	memset(tab->array, 0, tab->sizearray * sizeof(TValue));
 	memset(tab->node, 0, sizenode(tab)* sizeof(Node));
 	return tab;
@@ -453,6 +454,21 @@ Table *luaH_new (lua_State *L) {
 }
 
 Table *luaH_clone(lua_State *L, Table* src) {
+	unsigned short guid = src->guid;
+	if (guid)
+	{
+		Table* tab = _alltables[guid];
+		if(tab)
+		{
+			global_State *g = G(L);
+			GCObject *o = obj2gco(tab);
+			o->marked = luaC_white(g);
+			_alltables[guid] = o->next;
+			o->next = g->allgc;
+			g->allgc = o;
+			return tab;
+		}
+	}
 	GCObject *o = luaC_cloneobj(L, obj2gco(src), sizeof(Table));
 	Table *t = gco2t(o);
 	t->gclist = NULL;

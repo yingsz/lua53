@@ -445,8 +445,13 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	if (tab->node)
 	{
 		for (int i = 0; i < sizenode(tab); i++) {
-			Node * node = &(tab->node[i]);
-			setnilvalue(gval(node));
+			Node * n = &(tab->node[i]);
+			if (!ttisnil(gval(n)))
+			{
+				gnext(n) = 0;
+				setnilvalue(wgkey(n));
+				setnilvalue(gval(n));
+			}
 		}
 	}
 		//memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));

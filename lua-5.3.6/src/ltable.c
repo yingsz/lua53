@@ -436,8 +436,12 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	tab->metatable = NULL;
 	tab->flags = cast_byte(~0);
 	tab->lastfree = gnode(tab, sizenode(tab));
-	if(tab->array)
-		memset((void*)(tab->array), 0, tab->sizearray * sizeof(TValue));
+	if (tab->array)
+	{
+		for (int i = 0; i <= tab->sizearray; i++)
+			setnilvalue(&tab->array[i]);
+	}
+		//memset((void*)(tab->array), 0, tab->sizearray * sizeof(TValue));
 	if (tab->node)
 	{
 		for (int i = 0; i <= sizenode(tab); i++) {

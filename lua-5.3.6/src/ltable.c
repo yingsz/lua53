@@ -465,7 +465,7 @@ Table *luaH_clone(lua_State *L, Table* src) {
 			global_State *g = G(L);
 			GCObject *o = obj2gco(tab);
 			o->marked = luaC_white(g);
-			_alltables[guid] = o->next;
+			_alltables[guid] = gco2t(o->next);
 			o->next = g->allgc;
 			g->allgc = o;
 			return tab;
@@ -499,7 +499,7 @@ void luaH_free (lua_State *L, Table *t) {
 			obj2gco(head)->next = gco;
 		else
 			_alltables[t->guid] = gco2t(gco);
-		gco->next = head;
+		gco->next = obj2gco(head);
 		return;
 	}
 	luaH_freeimpl(L, t);

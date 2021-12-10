@@ -455,7 +455,7 @@ static Table* clonetabimpl(lua_State* L, Table* src)
 static int clonetab(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
-	Table* src = lua_topointer(L, 1);
+	Table* src = (Table*)lua_topointer(L, 1);
 	sethvalue(L, L->top++, clonetabimpl(L, src));
 	return 1;
 }
@@ -473,7 +473,7 @@ static int newGuid(lua_State* L)
 static int sizetab(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
-	Table* src = lua_topointer(L, 1);
+	Table* src = (Table*)lua_topointer(L, 1);
 	setivalue(L->top++, src->sizearray);
 	setivalue(L->top++, sizenode(src));
 	return 2;

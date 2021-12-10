@@ -38,7 +38,7 @@
 #include "ltable.h"
 #include "lvm.h"
 
-
+#include <string.h>
 /*
 ** Maximum size of array part (MAXASIZE) is 2^MAXABITS. MAXABITS is
 ** the largest integer such that MAXASIZE fits in an unsigned int.
@@ -429,7 +429,7 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	global_State *g = G(L);
 	GCObject *o = obj2gco(tab);
 	o->marked = luaC_white(g);
-	_alltables[guid] = o->next;
+	_alltables[guid] = gco2t(o->next);
 	o->next = g->allgc;
 	g->allgc = o;
 	tab->gclist = NULL;
@@ -437,9 +437,9 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	tab->flags = cast_byte(~0);
 	tab->lastfree = gnode(tab, sizenode(tab));
 	if(tab->array)
-		memset(tab->array, 0, tab->sizearray * sizeof(TValue));
+		memset((void*)(tab->array), 0, tab->sizearray * sizeof(TValue));
 	if(tab->node)
-		memset(tab->node, 0, sizenode(tab)* sizeof(Node));
+		memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
 	return tab;
 }
 
@@ -498,7 +498,7 @@ void luaH_free (lua_State *L, Table *t) {
 		if (head)
 			obj2gco(head)->next = gco;
 		else
-			_alltables[t->guid] = gco;
+			_alltables[t->guid] = gco2t(gco);
 		gco->next = head;
 		return;
 	}
@@ -515,7 +515,7 @@ void luaH_freeAllTable(lua_State* L)
 			GCObject* next = obj2gco(tab)->next;
 			luaH_freeimpl(L, tab);
 			if (next)
-				tab = next;
+				tab = gco2t(next);
 			else
 				tab = NULL;
 		}

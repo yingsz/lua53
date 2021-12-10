@@ -438,13 +438,13 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	tab->lastfree = gnode(tab, sizenode(tab));
 	if (tab->array)
 	{
-		for (int i = 0; i <= tab->sizearray; i++)
+		for (int i = 0; i < tab->sizearray; i++)
 			setnilvalue(&tab->array[i]);
 	}
 		//memset((void*)(tab->array), 0, tab->sizearray * sizeof(TValue));
 	if (tab->node)
 	{
-		for (int i = 0; i <= sizenode(tab); i++) {
+		for (int i = 0; i < sizenode(tab); i++) {
 			Node * node = &(tab->node[i]);
 			setnilvalue(gval(node));
 		}

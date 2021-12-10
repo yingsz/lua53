@@ -445,7 +445,7 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 			setnilvalue(gval(node));
 		}
 	}
-		memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
+		//memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
 	return tab;
 }
 

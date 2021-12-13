@@ -435,7 +435,6 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 	tab->gclist = NULL;
 	tab->metatable = NULL;
 	tab->flags = cast_byte(~0);
-	tab->lastfree = gnode(tab, sizenode(tab));
 	if (tab->array)
 	{
 		for (int i = 0; i < tab->sizearray; i++)
@@ -453,6 +452,7 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 				setnilvalue(gval(n));
 			}
 		}
+		tab->lastfree = gnode(tab, sizenode(tab));
 	}
 		//memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
 	return tab;
@@ -575,6 +575,7 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
       luaG_runerror(L, "table index is NaN");
   }
   mp = mainposition(t, key);
+  int isOthern = 0;
   if (!ttisnil(gval(mp)) || isdummy(t)) {  /* main position is taken? */
     Node *othern;
     Node *f = getfreepos(t);  /* get a free place */
@@ -599,6 +600,7 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
     }
     else {  /* colliding node is in its own main position */
       /* new node will go into free position */
+		isOthern = 1;
       if (gnext(mp) != 0)
         gnext(f) = cast_int((mp + gnext(mp)) - f);  /* chain new position */
       else lua_assert(gnext(f) == 0);
@@ -608,6 +610,10 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   }
   setnodekey(L, &mp->i_key, key);
   luaC_barrierback(L, t, key);
+  if (!ttisnil(gval(mp)))
+  {
+	  luaG_runerror(L, "assert failed %d %d %d %d", t->guid, (t->lastfree - t->node) / sizeof(Node), ttype(key), isOthern);
+  }
   lua_assert(ttisnil(gval(mp)));
   return gval(mp);
 }

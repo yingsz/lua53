@@ -514,17 +514,8 @@ void luaH_free (lua_State *L, Table *t) {
 	{
 		GCObject* gco = obj2gco(t);
 		Table* head = _alltables[t->guid];
-		if (head)
-		{
-			gco->next = obj2gco(head);
-			obj2gco(head)->next = gco;
-
-		}
-		else {
-			_alltables[t->guid] = gco2t(gco);
-			gco->next = NULL;
-		}
-			
+		gco->next = head ? obj2gco(head) : NULL;
+		_alltables[t->guid] = gco2t(gco);
 		return;
 	}
 	luaH_freeimpl(L, t);

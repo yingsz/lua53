@@ -478,6 +478,14 @@ static int sizetab(lua_State* L)
 	setivalue(L->top++, sizenode(src));
 	return 2;
 }
+
+static int guidInfo(lua_State* L)
+{
+	Table* tab = luaH_GetInfo(L);
+	sethvalue(L, L->top++, tab);
+	return 1;
+}
+
 static const luaL_Reg tab_funcs[] = {
   {"concat", tconcat},
 #if defined(LUA_COMPAT_MAXN)
@@ -490,6 +498,7 @@ static const luaL_Reg tab_funcs[] = {
   {"move", tmove},
   {"clone", clonetab},
   {"newGuid", newGuid},
+  {"guidInfo", guidInfo},
   {"size", sizetab},
   {"sort", sort},
   {NULL, NULL}

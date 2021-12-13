@@ -455,8 +455,12 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 		}
 		tab->lastfree = gnode(tab, sizenode(tab));
 	}*/
-	if(tab->node)
-		memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
+	if (tab->node)
+	{
+		memset((void*)(tab->node), 0, sizenode(tab) * sizeof(Node));
+		tab->lastfree = gnode(tab, sizenode(tab));
+	}
+		
 	g->GCdebt = g->GCdebt + sizeof(Table) + tab->sizearray * sizeof(TValue) + sizenode(tab) * sizeof(Node);
 	return tab;
 }
@@ -539,6 +543,32 @@ void luaH_freeAllTable(lua_State* L)
 		}
 	}
 	memset(_alltables, 0, sizeof(Table*)*MAXTABGUID);
+}
+
+Table* luaH_GetInfo(lua_State* L)
+{
+	Table* info = luaH_new(L);
+	for (int i = 0; i < MAXTABGUID; i++)
+	{
+		Table* tab = _alltables[i];
+		if (tab)
+		{
+			int count = 0;
+			while (tab)
+			{
+				GCObject* next = obj2gco(tab)->next;
+				count++;
+				if (next)
+					tab = gco2t(next);
+				else
+					break;
+			}
+			TValue k;
+			setivalue(&k, count);
+			luaH_setint(L, info, i, &k);
+		}
+	}
+	return info;
 }
 
 static Node *getfreepos (Table *t) {

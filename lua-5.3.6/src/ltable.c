@@ -454,6 +454,7 @@ Table* luaH_newGuid(lua_State* L, unsigned short guid)
 		}
 		tab->lastfree = gnode(tab, sizenode(tab));
 	}
+	g->GCdebt = g->GCdebt + sizeof(Table) + tab->sizearray * sizeof(TValue) + sizenode(tab) * sizeof(Node);
 		//memset((void*)(tab->node), 0, sizenode(tab)* sizeof(Node));
 	return tab;
 }
@@ -514,10 +515,16 @@ void luaH_free (lua_State *L, Table *t) {
 		GCObject* gco = obj2gco(t);
 		Table* head = _alltables[t->guid];
 		if (head)
+		{
+			gco->next = obj2gco(head);
 			obj2gco(head)->next = gco;
-		else
+
+		}
+		else {
 			_alltables[t->guid] = gco2t(gco);
-		gco->next = obj2gco(head);
+			gco->next = NULL;
+		}
+			
 		return;
 	}
 	luaH_freeimpl(L, t);

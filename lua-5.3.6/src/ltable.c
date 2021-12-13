@@ -488,7 +488,10 @@ Table *luaH_clone(lua_State *L, Table* src) {
 			global_State *g = G(L);
 			GCObject *o = obj2gco(tab);
 			o->marked = luaC_white(g);
-			_alltables[guid] = gco2t(o->next);
+			if (o->next)
+				_alltables[guid] = gco2t(o->next);
+			else
+				_alltables[guid] = NULL;
 			o->next = g->allgc;
 			g->allgc = o;
 		}

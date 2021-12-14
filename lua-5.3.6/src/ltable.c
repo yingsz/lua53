@@ -524,7 +524,7 @@ void luaH_free (lua_State *L, Table *t) {
 		Table* head = _alltables[t->guid];
 		gco->next = head ? obj2gco(head) : NULL;
 		_alltables[t->guid] = t;
-		g->GCdebt -= sizeof(Table) + t->sizearray * sizeof(TValue) + sizenode(tab) * sizeof(Node);
+		G(L)->GCdebt -= sizeof(Table) + t->sizearray * sizeof(TValue) + sizenode(t) * sizeof(Node);
 		return;
 	}
 	luaH_freeimpl(L, t);
